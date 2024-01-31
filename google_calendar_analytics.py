@@ -81,6 +81,9 @@ def main():
     for event in events:
         event_name = event['summary']
         event_names.append(event_name)
+        start = event['start'].get('dateTime', event['start'].get('date'))
+        end = event['end'].get('dateTime', event['end'].get('date'))
+        duration_in_minutes = (datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60
 
     event_count = Counter(event_names)
     sorted_event_count = {k: v for k, v in sorted(event_count.items(), key=lambda item: item[1], reverse=True)}
