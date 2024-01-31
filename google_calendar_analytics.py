@@ -22,8 +22,7 @@ def get_service():
         if creds.expired and creds.refresh_token:
             creds.refresh(Request())
     else:
-        flow = InstalledAppFlow.from_client_secrets_file(
-            'credentials.json', SCOPES)
+        flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
         creds = flow.run_local_server(port=0)
     # Save the credentials for the next run
     with open('token.json', 'w') as token:
@@ -36,6 +35,10 @@ def get_service():
 def get_all_past_year_events(service):
     now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     last_year = (datetime.utcnow() - timedelta(days=365)).isoformat() + 'Z'
+
+    print('Getting the past year\'s events')
+    print('From: ' + last_year)
+    print('To: ' + now)
 
     page_token = None
     events = []
@@ -80,8 +83,7 @@ def main():
         event_names.append(event_name)
 
     event_count = Counter(event_names)
-    sorted_event_count = {k: v for k, v in sorted(
-        event_count.items(), key=lambda item: item[1], reverse=True)}
+    sorted_event_count = {k: v for k, v in sorted(event_count.items(), key=lambda item: item[1], reverse=True)}
 
     # Replace escaped characters
     cleaned_data = {replace_escaped_characters(k): v for k, v in sorted_event_count.items()}

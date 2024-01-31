@@ -9,7 +9,7 @@ A simple python script to analyze your Google Calendar events.
 - Python 3.6+
 - Install the required packages with `pip install -r requirements.txt`
 - Create a Google Cloud Platform project and enable the Google Calendar API
-- Create and download the JSON credentials file
+- Create and download the JSON credentials file from [here](https://console.cloud.google.com/apis/credentials)
 
 ## Usage
 
