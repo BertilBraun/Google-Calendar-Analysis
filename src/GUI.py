@@ -12,7 +12,7 @@ class WeeklyCalendar:
         self.master.title('Weekly Calendar')
         self.master.geometry('800x600')
         self.year = datetime.now().year
-        self.week_number = datetime.now().isocalendar()[1]
+        self.week_number = datetime.now().isocalendar()[1] + 1
         self.events = events
         self.days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -96,22 +96,27 @@ class WeeklyCalendar:
                 event_start = event.start.replace(tzinfo=None)
                 event_end = event.end.replace(tzinfo=None)
 
-                # Calculate position
-                day_index = (event_start - start_date).days + 1
-                if day_index < 1 or day_index > 7:
-                    continue
-                start_hour = event_start.hour + event_start.minute / 60
-                end_hour = event_end.hour + event_end.minute / 60
+                # Loop through each day the event might span
+                current_start = event_start
+                while current_start.date() <= event_end.date():
+                    day_index = (current_start - start_date).days + 1
+                    if 1 <= day_index <= 7:  # Check if the day is within the current week view
+                        if current_start.date() == event_end.date():  # Event ends on this day
+                            end_hour = event_end.hour + event_end.minute / 60
+                        else:  # Event spans to the next day
+                            end_hour = 24  # Go up to the end of the day
 
-                # TODO if end_hour < start_hour then we have an event that spans multiple days, so we need to draw it on multiple days
+                        start_hour = current_start.hour + current_start.minute / 60
+                        start_pos = int(start_hour * 4) + 1  # Convert hours to 15-min intervals
+                        end_pos = int(end_hour * 4) + 1
+                        row_span = end_pos - start_pos
 
-                start_pos = int(start_hour * 4) + 1  # Convert hours to 15-min intervals
-                end_pos = int(end_hour * 4) + 1
-                row_span = end_pos - start_pos
+                        # Draw event rectangles
+                        event_slot = tk.Label(self.scrollable_frame, text=event.summary, bg=color, fg='black', height=1)
+                        event_slot.grid(row=start_pos, column=day_index, sticky='nsew', rowspan=row_span)
 
-                # Draw event rectangles
-                event_slot = tk.Label(self.scrollable_frame, text=event.summary, bg=color, fg='black', height=1)
-                event_slot.grid(row=start_pos, column=day_index, sticky='nsew', rowspan=row_span)
+                    current_start += timedelta(days=1)
+                    current_start = current_start.replace(hour=0, minute=0)  # Start at the beginning of the next day
 
     def refresh_calendar(self):
         # Clear existing content
