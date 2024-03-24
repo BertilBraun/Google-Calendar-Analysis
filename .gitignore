@@ -1,6 +1,5 @@
 myenv/**
 token.json
 credentials.json
-grouped_data.json
-cleaned_sorted_events.json
+private_analysis.py
 **/__pycache__/**

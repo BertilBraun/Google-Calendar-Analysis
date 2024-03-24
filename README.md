@@ -13,6 +13,6 @@ A simple python script to analyze your Google Calendar events.
 
 ## Usage
 
-- Run the script with `python -m src.google_calendar_analytics`
+- Run the script with `python google_calendar_analytics.py`
   This will open a browser window to authenticate with your Google account.
   The script will then help you to analyze your Google Calendar events.
