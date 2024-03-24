@@ -129,10 +129,12 @@ def main():
 
     calendar_id = calendars[int(input('Enter the number of the calendar you want to analyze: ')) - 1].id
 
+    events = get_events_within_days(service, calendar_id, days_in_past=365)
+
     event_names = []
     event_durations = []
 
-    for event in get_events_within_days(service, calendar_id, days_in_past=365):
+    for event in events:
         event_name = event['summary']
         duration_in_minutes = get_event_duration(event)
 
