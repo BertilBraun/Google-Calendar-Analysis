@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 
 from google.oauth2.credentials import Credentials
@@ -8,118 +6,10 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 from datetime import datetime, timedelta
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, Generic, TypeVar, TypedDict, Optional
 
-
-class CreatorOrOrganizer(TypedDict):
-    email: str
-    displayName: Optional[str]
-    self: Optional[bool]
-
-
-@dataclass(frozen=True)
-class Calendar:
-    id: str
-    name: str
-
-
-@dataclass(frozen=True)
-class Event:
-    id: str
-    status: str
-    summary: str
-    description: str
-    location: str
-    creator: CreatorOrOrganizer
-    organizer: CreatorOrOrganizer
-    start: datetime
-    end: datetime
-    created: str
-    updated: str
-    calendar: Calendar
-
-    @property
-    def duration(self) -> int:
-        """
-        Calculates the duration of an event in minutes.
-        :return: The duration of the event in minutes
-        """
-        return (self.end - self.start).seconds // 60
-
-    @property
-    def tokenized(self) -> str:
-        """
-        Tokenizes the summary of the event by splitting it into lowercase words, removing duplicates, removing special characters, and sorting the words.
-        :return: A tokenized version of the event summary
-        """
-        # replace every non-alphanumeric character with a space
-        summary = ''.join(c if c.isalnum() else ' ' for c in self.summary)
-        # split the summary into words, convert them to lowercase, remove duplicates, and sort them
-        return ' '.join(sorted(set(word.lower().strip() for word in summary.split(' '))))
-
-    def __repr__(self) -> str:
-        return self.summary
-
-
-K = TypeVar('K')
-
-
-class EventGroup(Dict[K, 'EventList'], Generic[K]):
-    def sort_by(self, key: Callable[[EventList], Any]) -> EventGroup[K]:
-        return EventGroup(sorted(self.items(), key=lambda item: key(item[1]), reverse=True))
-
-    def map_keys(self, key: Callable[[EventList], K]) -> EventGroup:
-        return EventGroup({key(v): v for k, v in self.items()})
-
-    def filter(self, condition: Callable[[EventList], bool]) -> EventGroup[K]:
-        return EventGroup({k: v for k, v in self.items() if condition(v)})
-
-
-class EventList:
-    def __init__(self, events: list[Event]) -> None:
-        self.events = events
-
-    def filter(self, condition: Callable[[Event], bool]) -> EventList:
-        return EventList([event for event in self.events if condition(event)])
-
-    def group_by(self, key: Callable[[Event], K]) -> EventGroup[K]:
-        groups: EventGroup = EventGroup()
-
-        for event in self.events:
-            key_value = key(event)
-            if key_value not in groups:
-                groups[key_value] = EventList([])
-            groups[key_value].events.append(event)
-
-        # return sorted dictionary by size of the group
-        return groups.sort_by(lambda group: len(group))
-
-    def group_by_summary(self) -> EventGroup[str]:
-        return self.group_by(lambda event: event.summary)
-
-    def group_by_tokenized(self) -> EventGroup[str]:
-        grouped = self.group_by(lambda event: event.tokenized)
-        # map the key to the first event's summary for better readability
-        return grouped.map_keys(lambda group: group[0].summary)
-
-    def sum_duration(self) -> int:
-        return sum(event.duration for event in self.events)
-
-    def __iter__(self):
-        return iter(self.events)
-
-    def __len__(self):
-        return len(self.events)
-
-    def __getitem__(self, index):
-        return self.events[index]
-
-    def __repr__(self) -> str:
-        return str(self.events)
-
-    def __add__(self, other: EventList) -> EventList:
-        return EventList(self.events + other.events)
+from src.Calendar import Calendar
+from src.Event import Event
+from src.EventList import EventList
 
 
 class Client:
@@ -247,53 +137,3 @@ class Client:
                 for event in events_data
             ]
         )
-
-
-def select_calendar(client: Client) -> Calendar:
-    """
-    Displays a list of available calendars and prompts the user to select one.
-    :param client: The Client object to use for fetching the calendars
-    :return: The selected Calendar object
-    """
-    calendars = client.get_calendars()
-
-    print('Available calendars:')
-    for i, calendar in enumerate(calendars):
-        print(f'{i + 1}. {calendar.name}')
-
-    calendar = calendars[int(input('Enter the number of the calendar you want to analyze: ')) - 1]
-    return calendar
-
-
-def get_events_in_last_year_from_user_chosen_calendar() -> EventList:
-    client = Client()
-    calendar = select_calendar(client)
-    events = client.get_events_within_days(calendar, days_in_past=365)
-    return events
-
-
-def get_events_in_last_year_from_all_calendars() -> EventList:
-    client = Client()
-    calendars = client.get_calendars()
-    events = EventList([])
-    for calendar in calendars:
-        events += client.get_events_within_days(calendar, days_in_past=365)
-    return events
-
-
-if __name__ == '__main__':
-    # events = get_events_in_last_year_from_user_chosen_calendar()
-    events = get_events_in_last_year_from_all_calendars()
-
-    total_time_spent = events.sum_duration()
-    print(f'Total time spent on all events: {total_time_spent} minutes')
-
-    grouped_events = (
-        events.group_by_tokenized().filter(lambda group: len(group) > 5).sort_by(lambda group: -group.sum_duration())
-    )
-    print('Events with more than 5 occurrences:')
-    for event_name, group in grouped_events.items():
-        print(f'{event_name}: {len(group)} times, {group.sum_duration()} minutes')
-
-    total_time_for_chess = events.filter(lambda e: 'chess' in e.summary.lower()).sum_duration()
-    print(f'Total time spent on Chess: {total_time_for_chess} minutes')

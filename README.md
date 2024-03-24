@@ -42,7 +42,7 @@ This project is a comprehensive Python application for analyzing Google Calendar
 Execute the script with the following command:
 
 ```bash
-python google_calendar_analytics.py
+python -m src
 ```
 
 Upon the first run, you will be prompted to authenticate with your Google account through a web browser. This step authorizes the application to access your Google Calendar events.
@@ -114,6 +114,17 @@ for event_name, group in sorted_events.items():
 ```
 
 These examples illustrate the flexibility of the project in performing custom analyses. Users can modify these snippets to fit their specific needs, such as analyzing different time frames, focusing on other types of events, or applying different criteria for grouping and filtering.
+
+### Graphical Representation
+
+The project also supports graphical representation of the analyzed data. You can visualize a filtered, sorted or grouped set of events using the `display_event_list` or `display_event_group` functions in a calendar format based on tkinter. Here's an example:
+
+```python
+events = get_events_in_last_year_from_all_calendars()
+
+# Display all meeting events from the last year in a calendar
+display_event_list(events.filter(lambda e: 'meeting' in e.summary.lower()))
+```
 
 ## Contributing
 
