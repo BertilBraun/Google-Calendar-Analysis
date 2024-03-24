@@ -19,6 +19,12 @@ class CreatorOrOrganizer(TypedDict):
 
 
 @dataclass(frozen=True)
+class Calendar:
+    id: str
+    name: str
+
+
+@dataclass(frozen=True)
 class Event:
     id: str
     status: str
@@ -31,6 +37,7 @@ class Event:
     end: datetime
     created: str
     updated: str
+    calendar: Calendar
 
     @property
     def duration(self) -> int:
@@ -53,12 +60,6 @@ class Event:
 
     def __repr__(self) -> str:
         return self.summary
-
-
-@dataclass(frozen=True)
-class Calendar:
-    id: str
-    name: str
 
 
 K = TypeVar('K')
@@ -193,12 +194,12 @@ class Client:
         time_max = (datetime.utcnow() + timedelta(days=days_in_future)).isoformat() + 'Z'
         time_min = (datetime.utcnow() - timedelta(days=days_in_past)).isoformat() + 'Z'
 
-        return self.__get_events(calendar.id, time_min, time_max)
+        return self.__get_events(calendar, time_min, time_max)
 
-    def __get_events(self, calendar_id: str, time_min: str, time_max: str) -> EventList:
+    def __get_events(self, calendar: Calendar, time_min: str, time_max: str) -> EventList:
         """
         Gets all events from the specified calendar between the specified time range.
-        :param calendar_id: The ID of the calendar to get events from
+        :param calendar: The Calendar to get events from
         :param time_min: The minimum time of the events to get
         :param time_max: The maximum time of the events to get
         :return: A list of all events in the specified time range
@@ -211,7 +212,7 @@ class Client:
             events_result = (
                 self.service.events()
                 .list(
-                    calendarId=calendar_id,
+                    calendarId=calendar.id,
                     timeMin=time_min,
                     timeMax=time_max,
                     pageToken=page_token,
@@ -241,6 +242,7 @@ class Client:
                     end=datetime.fromisoformat(event['end'].get('dateTime', event['end'].get('date'))),
                     created=event['created'],
                     updated=event['updated'],
+                    calendar=calendar,
                 )
                 for event in events_data
             ]
