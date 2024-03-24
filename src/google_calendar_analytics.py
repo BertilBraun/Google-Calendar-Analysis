@@ -99,11 +99,12 @@ def get_events(service, calendar_id: str, time_min: str, time_max: str) -> list[
     return events
 
 
-def get_events_in_past(service, calendar_id: str, days: int) -> list[Event]:
-    now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-    last_year = (datetime.utcnow() - timedelta(days=days)).isoformat() + 'Z'
+def get_events_within_days(service, calendar_id: str, days_in_future: int = 0, days_in_past: int = 0) -> list[Event]:
+    # 'Z' indicates UTC time
+    time_max = (datetime.utcnow() + timedelta(days=days_in_future)).isoformat() + 'Z'
+    time_min = (datetime.utcnow() - timedelta(days=days_in_past)).isoformat() + 'Z'
 
-    return get_events(service, calendar_id, last_year, now)
+    return get_events(service, calendar_id, time_min, time_max)
 
 
 def get_event_duration(event: Event) -> int:
@@ -124,14 +125,14 @@ def main():
 
     print('Available calendars:')
     for i, calendar in enumerate(calendars):
-        print(f'{i + 1}. {calendar.name} ({calendar.id})')
+        print(f'{i + 1}. {calendar.name}')
 
     calendar_id = calendars[int(input('Enter the number of the calendar you want to analyze: ')) - 1].id
 
     event_names = []
     event_durations = []
 
-    for event in get_events_in_past(service, calendar_id, days=365):
+    for event in get_events_within_days(service, calendar_id, days_in_past=365):
         event_name = event['summary']
         duration_in_minutes = get_event_duration(event)
 

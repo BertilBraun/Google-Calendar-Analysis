@@ -13,8 +13,6 @@ A simple python script to analyze your Google Calendar events.
 
 ## Usage
 
-- Run the script with `python google_calendar_analytics.py`
+- Run the script with `python -m src.google_calendar_analytics`
   This will open a browser window to authenticate with your Google account.
-  The script will then output a json file with the events of the last year.
-
-- Run the script with `python group_data.py` to group the events by their title and output a json file with the grouped events.
+  The script will then help you to analyze your Google Calendar events.
