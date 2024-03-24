@@ -3,3 +3,4 @@ token.json
 credentials.json
 grouped_data.json
 cleaned_sorted_events.json
+**/__pycache__/**
