@@ -33,7 +33,12 @@ class Client:
         if not credentials or not credentials.valid:
             # If there are no (valid) credentials available, let the user log in.
             if credentials and credentials.expired and credentials.refresh_token:
-                credentials.refresh(Request())
+                try:
+                    credentials.refresh(Request())
+                except Exception as e:
+                    print(f'Error refreshing credentials: {e}')
+                    os.remove('token.json')
+                    return Client.get_service()
             else:
                 # Initialize the Calendar API
                 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
